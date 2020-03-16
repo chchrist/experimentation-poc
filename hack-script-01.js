@@ -22,7 +22,7 @@ window.onload = function() {
   document.querySelector("body").innerHTML = '<a href="https://community.vuetifyjs.com" target="_blank">Discord Community</a>';
 
   var myWindow = document.getElementById('myIFrame').contentWindow;
-myWindow.postMessage(message, "*"); // Noncompliant; how do you know what you loaded in 'myIFrame' is still there?
+myWindow.postMessage(message, "***"); // Noncompliant; how do you know what you loaded in 'myIFrame' is still there?
 
 
 var mysql = require('mysql');
