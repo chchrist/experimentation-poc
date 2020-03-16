@@ -12,6 +12,7 @@ window.onload = function() {
 
       var db = window.openDatabase("myDb", "1.0", "Personal secrets stored here", 2*1024*1024);  // Noncompliant
 
+    this.document.querySelector('body').innerHTML = '<a href="https://community.vuetifyjs.com" target="_blank">Discord Community</a>'
 
 
 }
