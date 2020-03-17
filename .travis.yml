@@ -1,8 +1,8 @@
 language: node_js
 node_js:
     - 10
-install:
-- yarn
 
 script:
+- cd test-app
+- yarn install
 - yarn build
