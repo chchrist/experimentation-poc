@@ -20,8 +20,4 @@ export default (req, res) => {
       res.end(JSON.parse(buf));
     });
   }
-
-  // res.statusCode = 200
-  // res.setHeader('Content-Type', 'application/json')
-  // res.end(JSON.stringify({ name: 'John Doe' }))
 };
