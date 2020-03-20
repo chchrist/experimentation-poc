@@ -13,7 +13,7 @@ export default (req, res) => {
   }
 
   if (req.method === "GET") {
-    fs.readFile("color.json", (err, buf) => {
+    fs.readFile("script.json", (err, buf) => {
       if (err) console.log(err);
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
