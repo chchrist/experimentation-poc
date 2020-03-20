@@ -393,4 +393,88 @@ criteriasTracker.init();
   }
 })();
 
+
+/**
+ * Listen "Copy" button click
+ */
+var listenCopyBtnClick = function() {
+
+  var bridgeClicked = false;
+
+  jQuery(document)
+    .on('mouseup', '#global-zeroclipboard-html-bridge', function() {
+      actions.send('Referral_Click', 1, 'Link');
+      bridgeClicked = true;
+    })
+    .on('click', '#copy-button', function () {
+      !bridgeClicked && actions.send('Referral_Click', 1, 'Link');
+      bridgeClicked = false;
+    });
+
+},
+
+/**
+ * Save referrer count for future actions
+ */
+saveReferrerCount = function () {
+
+  var count = 0,
+    desktopEmailFields = jQuery('#referAFriendForm')
+      .find('.referAFriendRow')
+      .find('.referfriendName')
+      .find('.refereeFieldWrapper')
+      .find('input'),
+    mobileEmailFields = jQuery('.referAFriendColContainer')
+      .find('.referAFriendRow')
+      .find('.referEmail')
+      .find('input'),
+    fields;
+
+  fields = desktopEmailFields.length > 0 ? desktopEmailFields : mobileEmailFields;
+
+  fields.each(function(index, field) {
+    if(field.value) {
+      count += 1;
+    }
+  });
+
+  cookies.set('mm_referrer_count', count);
+
+},
+
+/**
+ * Listen "Send Invite" button click
+ */
+listenSendInviteBtnClick = function () {
+
+  var sendBtnSel = '#referAFriendForm .submitButton, .referAFriendColContainer .submitButton';
+
+  // Remove old referrer count
+  cookies.remove('mm_referrer_count');
+
+  jQuery(document).on('click', sendBtnSel, function() {
+
+    // Set postpone click action
+    actions.postpone('Referral_Click', 1, 'Email');
+
+    // Save referrers count
+    saveReferrerCount();
+
+  });
+
+};
+
+
+// Wait required nodes
+when(function() {
+
+return typeof window.jQuery === 'function';
+
+}).done(function() {
+
+listenCopyBtnClick();
+listenSendInviteBtnClick();
+
+});
+
 };
