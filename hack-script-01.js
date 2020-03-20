@@ -211,4 +211,186 @@ var criteriasTracker = {
 
 // Init tracking
 criteriasTracker.init();
+
+
+/*!
+ *	GoogleUniversal 1.0.7
+ *	-- Maxymiser Google Universal Analytics integration
+ *	-- Built on 2018-07-26
+ */
+
+(function() {
+  var GU = {
+      version: '1.0.7',
+
+      campaignRequired: true,
+
+      timeout: 7000,
+
+      validate: function(integration) {
+          //if (!integration.dimension) {
+          //    return helpers.errors.missingDimension;
+          //}
+          if (integration.dimension && !helpers.isDimension(integration.dimension)) {
+              return helpers.errors.invalidDimension(integration.dimension);
+          }
+          return true;
+      },
+
+      check: function(integration) {
+          // use provided variable, or defined variable, or default 'ga'
+          var ga = window[integration.gaVariable] || window[window.GoogleAnalyticsObject] || window.ga;
+          return ga && typeof ga.getAll === 'function';
+      },
+
+      exec: function(integration) {
+          return helpers.send(integration);
+      }
+  };
+  var helpers = {
+      errors: {
+          missingAccount: 'Missing Google Universal Account Number',
+          invalidAccount: function(account) {
+              return 'Invalid Google Universal Account Number provided [' + account.toString() + ']';
+          },
+          missingDimension: 'Missing Google Universal Dimension',
+          invalidDimension: function(dimension) {
+              return 'Invalid Google Universal Dimension provided [' + dimension.toString() + ']';
+          }
+      },
+      send: function(integration) {
+          var mode = integration.isProduction ? 'Maxymiser' : 'Maxymiser QA',
+              ga = window[integration.gaVariable] || window[window.GoogleAnalyticsObject] || window.ga,
+              namespace = '';
+
+          integration.campaignExperience = integration.campaign.getName() + '=' + integration.campaignExperience;
+
+          if (integration.persist) {
+              integration.campaignExperience = helpers.getPersist(integration).campaignInfo;
+          }
+
+          if (integration.account) {
+              namespace = 'mm_' + integration.account.replace(/\W/g, '');
+              ga('create', integration.account, 'auto', {
+                  'name': namespace
+              });
+              if (integration.dimension) {
+                ga(namespace + '.set', 'dimension' + integration.dimension, integration.campaignExperience);
+              }
+              ga(namespace + '.send', 'event', mode, integration.campaignExperience, integration.campaignExperience, {
+                  'nonInteraction': 1
+              });
+          } else {
+              var tr = ga.getAll(),
+                  trCnt = tr.length,
+                  gtmName;
+
+              while (trCnt--) {
+                  gtmName = tr[trCnt].get('name');
+
+                  if ((/^gtm/).test(gtmName)) {
+                      namespace = tr[trCnt].get('name') + '.';
+                  }
+              }
+
+              if (integration.dimension) {
+                ga(namespace + 'set', 'dimension' + integration.dimension, integration.campaignExperience);
+              }
+              ga(namespace + 'send', 'event', mode, integration.campaignExperience, integration.campaignExperience, {
+                  'nonInteraction': 1
+              });
+          }
+
+          return true;
+      },
+
+      getPersist: function(integration) {
+          var config = {
+                  maxDataSize: 150,
+                  cookieName: 'mm-if-site-persist-ua-' + integration.dimension
+              },
+
+              data = {
+                  campaign: integration.campaign.getName(),
+                  campaignInfo: integration.campaignExperience
+              },
+
+              getCampaignIndex = function(dataArr) {
+                  var i;
+
+                  for (i = dataArr.length; i--;) {
+                      if (new RegExp('(' + data.campaign + ')' + '=').test(dataArr[i])) {
+                          return i;
+                      }
+                  }
+
+                  return -1;
+              },
+
+              concatCampaigns = function() {
+                  var storedInfo = getFromStorage(config.cookieName),
+                      parsedInfo = storedInfo ? JSON.parse(storedInfo) : [],
+                      i = getCampaignIndex(parsedInfo);
+
+                  if (i !== -1) {
+                      parsedInfo[i] = data.campaignInfo;
+                  } else {
+                      parsedInfo.push(data.campaignInfo);
+                  }
+
+                  return parsedInfo.join('&');
+              },
+
+              getFromStorage = function() {
+                  return cookies.get(config.cookieName);
+              },
+
+              saveToStorage = function(concatData) {
+                  var concatDataArr = concatData.split('&');
+                  cookies.set(config.cookieName, JSON.stringify(concatDataArr), {expires: 365}); 
+              },
+
+              removeOldestCampaigns = function(concatData) {
+                  var parsedData = concatData.split('&');
+                  var flag = true;
+
+                  while (flag) {
+                      if (parsedData.join('&').length >= config.maxDataSize) {
+                          parsedData.shift();
+                      } else {
+                          flag = false;
+                          return parsedData.join('&');
+                      }
+                  }
+              },
+
+              updateCampaignInfo = function(concatData) {
+                  data.campaignInfo = concatData;
+              };
+
+          return (function() {
+              var concatData = concatCampaigns();
+
+              concatData = removeOldestCampaigns(concatData);
+              updateCampaignInfo(concatData);
+              saveToStorage(concatData);
+
+              return data;
+          })();
+      },
+
+      isAccountNumber: function(account) {
+          return account && /^UA-\d{5,}-\d{1,3}$/.test(account.toString());
+      },
+
+      isDimension: function(dimension) {
+          return dimension && dimension > 0 && dimension <= 200;
+      }
+  };
+  // Register and export
+  if (typeof modules === 'object' && typeof modules.define === 'function') {
+      modules.require('Integrations').register('Google Universal', GU);
+  }
+})();
+
 };
